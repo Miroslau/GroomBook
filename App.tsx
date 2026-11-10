@@ -1,20 +1,43 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import RootNavigator from './src/navigation/root-navigation';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import { Provider, useSelector } from 'react-redux';
+import { RootState, store } from './src/store/store';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuthInit } from './src/hooks/useAuthInit';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+
+WebBrowser.maybeCompleteAuthSession();
+SplashScreen.preventAutoHideAsync();
+
+function AppContent() {
+  const [fontsLoaded, fontsError] = useFonts({});
+
+  const { isInitializing: isAuthInitializing } = useAuthInit();
+
+  useEffect(() => {
+    if ((fontsLoaded || fontsError) && !isAuthInitializing) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, fontsError, isAuthInitializing]);
+
+  if ((!fontsLoaded && !fontsError) || isAuthInitializing) {
+    return null;
+  }
+
+  return <RootNavigator />;
+}
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <GestureHandlerRootView>
+        <BottomSheetModalProvider>
+          <AppContent />
+        </BottomSheetModalProvider>
+      </GestureHandlerRootView>
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

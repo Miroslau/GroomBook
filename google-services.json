@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "907187837254",
+    "project_id": "grooming-app-89a51",
+    "storage_bucket": "grooming-app-89a51.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:907187837254:android:a19981b3a9542b0977ed47",
+        "android_client_info": {
+          "package_name": "com.mr_miraslau.groomingapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "907187837254-fm3qvb2jnvp8s9fadm61csb66kc98euu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mr_miraslau.groomingapp",
+            "certificate_hash": "27dbf76c7772915fbc693707ce9865bfbb3b6d99"
+          }
+        },
+        {
+          "client_id": "907187837254-99o7pjb4sid54eg94scdj1qo9mok74f9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPLQCy67fofgo9e6qioRU6NSlXB9OvIKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "907187837254-99o7pjb4sid54eg94scdj1qo9mok74f9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
