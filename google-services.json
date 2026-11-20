@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "907187837254-vb3voq0cnj86otiggvhl9kfc8ed0ib6l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mr_miraslau.groomingapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "907187837254-99o7pjb4sid54eg94scdj1qo9mok74f9.apps.googleusercontent.com",
           "client_type": 3
         }

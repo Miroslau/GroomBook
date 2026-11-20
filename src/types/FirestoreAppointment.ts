@@ -1,7 +1,8 @@
 export interface FirestoreAppointment {
   id?: string;
   date: string;
-  slotHour: number;
+  slotTime: string;
+  slotHour?: number;
   clientName: string;
   pet: string;
   service: string;

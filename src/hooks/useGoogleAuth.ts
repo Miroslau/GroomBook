@@ -68,6 +68,7 @@ export const useGoogleAuth = (): UseGoogleAuthResult => {
   useEffect(() => {
     GoogleSignin.configure({
       webClientId: WEB_CLIENT_ID,
+      iosClientId: '907187837254-sp7udhl15q9emqro5vfprd2k2p8ealkm.apps.googleusercontent.com',
       offlineAccess: true,
     });
   }, []);
