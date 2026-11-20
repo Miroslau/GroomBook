@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, StyleSheet, View, Keyboard } from 'react-native';
 import { PressableButton } from '../../components/Button/Button';
@@ -18,25 +18,35 @@ import { UserData } from '../../store/feature/auth/authSlice';
 import {
   createAppointment,
   subscribeToWeekAppointments,
+  unsubscribeFromAppointments,
 } from '../../store/feature/appointment/appointmentsSlice';
 import {
   selectAppointmentsCountMap,
   selectTimelineDataForDate,
 } from '../../store/feature/appointment/appointmentsSelectors';
 import GroomingCard from '../../components/GroomingCard/GroomingCard';
+import { AppointmentFormData } from '../../types/appointmentFormSchema';
+import { TimelineSlotItem } from '../../components/TimeLine/TimelineSlotItem';
 
 const HomeScreen = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeSlot, setActiveSlot] = useState<TimelineSlot | null>(null);
   const bottomSheetRef = useRef<BottomSheetModalRef>(null);
-  const { user } = useSelector((state: RootState) => state.auth);
+
+  const user = useAppSelector((state) => state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
 
-  const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const dateStr = useMemo(() => format(selectedDate, 'yyyy-MM-dd'), [selectedDate]);
+  const weekStartDate = useMemo(
+    () => format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd'),
+    [selectedDate]
+  );
 
   const appointmentsCountMap = useAppSelector(selectAppointmentsCountMap);
-  const { dayAppointmentsMap, bookedTimes } = useAppSelector(selectTimelineDataForDate(dateStr));
+  const { dayAppointmentsMap, bookedTimes } = useAppSelector((state) =>
+    selectTimelineDataForDate(state, dateStr)
+  );
 
   const handleSlotPress = useCallback((slot: TimelineSlot) => {
     setActiveSlot(slot);
@@ -44,27 +54,24 @@ const HomeScreen = () => {
   }, []);
 
   const handleFormSubmit = useCallback(
-    async (formData: any) => {
-      console.log('user: ', user);
-      console.log('activeSlot: ', activeSlot);
+    async (formData: AppointmentFormData) => {
       if (!user || !activeSlot) return;
       const { uid } = user as UserData;
       setIsSubmitting(true);
       try {
         Keyboard.dismiss();
-        const slotHour = parseInt(activeSlot.time.split(':')[0], 10);
 
         await dispatch(
           createAppointment({
             uid,
             dateStr,
-            slotHour,
+            slotTime: activeSlot.time,
             formData,
           })
         ).unwrap();
 
         bottomSheetRef.current?.dismiss();
-      } catch (error) {
+      } catch (error: unknown) {
       } finally {
         setIsSubmitting(false);
       }
@@ -89,40 +96,25 @@ const HomeScreen = () => {
   }, []);
 
   const renderSlotContent = useCallback(
-    (slot: TimelineSlot) => {
-      const hourInt = parseInt(slot.time.split(':')[0], 10);
-      const appointmentData = dayAppointmentsMap.get(hourInt);
-
-      return (
-        <PressableButton
-          onPress={handleSlotPress.bind(this, slot)}
-          activeScale={slot.isAvailable ? 0.98 : 0.99}
-          accessibilityLabel={`Слот на ${slot.time}. ${slot.isAvailable ? 'Свободно' : 'Занято'}`}
-          style={styles.slotPressable}
-        >
-          {slot.isAvailable ? (
-            <Text style={styles.availableText}>Доступно</Text>
-          ) : (
-            appointmentData && (
-              <GroomingCard
-                clientName={appointmentData.clientName}
-                pet={appointmentData.pet}
-                service={appointmentData.service}
-              />
-            )
-          )}
-        </PressableButton>
-      );
-    },
+    (slot: TimelineSlot) => (
+      <TimelineSlotItem
+        slot={slot}
+        appointment={dayAppointmentsMap.get(slot.time)}
+        onPress={handleSlotPress}
+      />
+    ),
     [dayAppointmentsMap, handleSlotPress]
   );
 
   useEffect(() => {
-    if (user) {
-      const { uid } = user as UserData;
-      dispatch(subscribeToWeekAppointments({ selectedDate: selectedDate.toDateString(), uid }));
-    }
-  }, [dispatch, selectedDate, user]);
+    if (!user?.uid) return;
+
+    dispatch(subscribeToWeekAppointments({ weekStartDate, uid: user.uid }));
+
+    return () => {
+      dispatch(unsubscribeFromAppointments());
+    };
+  }, [dispatch, weekStartDate, user?.uid]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -137,10 +129,16 @@ const HomeScreen = () => {
         </View>
         <View style={styles.timelineDivider} />
         <View style={styles.contentColumn}>
-          <Text style={styles.headerText}>SLOT STATUS</Text>
+          <Text style={styles.headerText}>СТАТУС СЛОТА</Text>
         </View>
       </View>
-      <TimeLine bookedTimes={bookedTimes} renderItem={renderSlotContent} />
+      <TimeLine
+        startHour={9}
+        endHour={19}
+        stepMinutes={30}
+        bookedTimes={bookedTimes}
+        renderItem={renderSlotContent}
+      />
       <CustomBottomSheetModal
         ref={bottomSheetRef}
         snapPoints={['60%', '90%']}

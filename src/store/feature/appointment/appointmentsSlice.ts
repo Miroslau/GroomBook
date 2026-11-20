@@ -1,7 +1,7 @@
 import { FirestoreAppointment } from '../../../types/FirestoreAppointment';
 import { WeekStatusEnum } from '../../../enums/weekStatus';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { endOfWeek, format, parseISO, startOfWeek } from 'date-fns';
 import {
   doc,
   collection,
@@ -14,11 +14,21 @@ import {
 import { db } from '../../../utils/firebaseConfig';
 import { AppointmentFormData } from '../../../types/appointmentFormSchema';
 import { RootState } from '../../store';
+import {
+  buildAppointmentDocId,
+  getErrorMessage,
+  normalizeSlotTime,
+} from '../../../utils/timeUtils';
+
+interface SubscribeWeekPayload {
+  weekStartDate: string;
+  uid: string;
+}
 
 interface CreateAppointmentPayload {
   uid: string;
   dateStr: string;
-  slotHour: number;
+  slotTime: string;
   formData: AppointmentFormData;
 }
 
@@ -36,9 +46,9 @@ const initialState: AppointmentsState = {
 
 let unsubscribeTimeLine: (() => void) | null = null;
 
-export const subscribeToWeekAppointments = createAsyncThunk(
+export const subscribeToWeekAppointments = createAsyncThunk<void, SubscribeWeekPayload>(
   'appointments/subscribeToWeek',
-  async ({ selectedDate, uid }: { selectedDate: string; uid: string }, { dispatch }) => {
+  async ({ weekStartDate, uid }, { dispatch }) => {
     if (unsubscribeTimeLine) {
       unsubscribeTimeLine();
       unsubscribeTimeLine = null;
@@ -46,7 +56,7 @@ export const subscribeToWeekAppointments = createAsyncThunk(
 
     dispatch(appointmentsSlice.actions.setStatus(WeekStatusEnum.LOADING));
 
-    const parsedDate = new Date(selectedDate);
+    const parsedDate = parseISO(weekStartDate);
     const start = startOfWeek(parsedDate, { weekStartsOn: 1 });
     const end = endOfWeek(parsedDate, { weekStartsOn: 1 });
 
@@ -64,9 +74,9 @@ export const subscribeToWeekAppointments = createAsyncThunk(
       unsubscribeTimeLine = onSnapshot(
         q,
         (snapshot) => {
-          const appointmentsData: FirestoreAppointment[] = [];
-          snapshot.forEach((doc) => {
-            const data = doc.data();
+          const appointmentsData: FirestoreAppointment[] = snapshot.docs.map((docSnap) => {
+            const data = docSnap.data();
+
             const createdAtIso = data.createdAt?.toDate
               ? data.createdAt.toDate().toISOString()
               : new Date().toISOString();
@@ -74,12 +84,18 @@ export const subscribeToWeekAppointments = createAsyncThunk(
             const updatedAtIso = data.updatedAt?.toDate
               ? data.updatedAt.toDate().toISOString()
               : new Date().toISOString();
-            appointmentsData.push({
-              ...data,
-              id: doc.id,
+
+            return {
+              id: docSnap.id,
+              date: String(data.date ?? ''),
+              slotTime: normalizeSlotTime(data.slotTime, data.slotHour),
+              slotHour: typeof data.slotHour === 'number' ? data.slotHour : undefined,
+              clientName: String(data.clientName ?? ''),
+              pet: String(data.pet ?? ''),
+              service: String(data.service ?? ''),
               createdAt: createdAtIso,
               updatedAt: updatedAtIso,
-            } as FirestoreAppointment);
+            };
           });
 
           dispatch(appointmentsSlice.actions.setWeekAppointments(appointmentsData));
@@ -104,36 +120,29 @@ export const unsubscribeFromAppointments = createAsyncThunk(
   }
 );
 
-export const createAppointment = createAsyncThunk(
+export const createAppointment = createAsyncThunk<FirestoreAppointment, CreateAppointmentPayload>(
   'appointments/create',
-  async (
-    { uid, dateStr, slotHour, formData }: CreateAppointmentPayload,
-    { getState, rejectWithValue }
-  ) => {
+  async ({ uid, dateStr, slotTime, formData }, { getState, rejectWithValue }) => {
     try {
       const state = getState() as RootState;
 
       const isSlotBooked = state.appointments.weekAppointments.some(
-        (app) => app.date === dateStr && app.slotHour === slotHour
+        (app) => app.date === dateStr && app.slotTime === slotTime
       );
 
       if (isSlotBooked) {
         return rejectWithValue('Этот временной слот уже занят другой записью.');
       }
 
-      const trimmedClientName = formData.clientName.trim();
-      const trimmedPet = formData.pet.trim();
-      const trimmedService = formData.service.trim();
-
-      const docId = `${dateStr}_${slotHour}`;
+      const docId = buildAppointmentDocId(dateStr, slotTime);
       const docRef = doc(db, 'users', uid, 'appointments', docId);
 
       const appointmentData = {
         date: dateStr,
-        slotHour,
-        clientName: trimmedClientName,
-        pet: trimmedPet,
-        service: trimmedService,
+        slotTime,
+        clientName: formData.clientName.trim(),
+        pet: formData.pet.trim(),
+        service: formData.service.trim(),
       };
 
       await setDoc(docRef, {
@@ -141,14 +150,17 @@ export const createAppointment = createAsyncThunk(
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+
+      const nowIso = new Date().toISOString();
+
       return {
         ...appointmentData,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      } as FirestoreAppointment;
-    } catch (error: any) {
-      console.error('error: ', error);
-      return rejectWithValue(error.message);
+        createdAt: nowIso,
+        updatedAt: nowIso,
+      };
+    } catch (error: unknown) {
+      console.error('Create appointment error: ', error);
+      return rejectWithValue(getErrorMessage(error, 'Не удалось создать запись'));
     }
   }
 );
@@ -175,15 +187,25 @@ const appointmentsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(createAppointment.fulfilled, (state, action) => {
-        state.weekAppointments.push(action.payload);
+        const existingIndex = state.weekAppointments.findIndex(
+          (item) => item.id === action.payload.id
+        );
+
+        if (existingIndex !== -1) {
+          state.weekAppointments[existingIndex] = action.payload;
+        } else {
+          state.weekAppointments.push(action.payload);
+        }
+
         state.status = WeekStatusEnum.SUCCEEDED;
+        state.error = null;
       })
       .addCase(createAppointment.rejected, (state, action) => {
         state.status = WeekStatusEnum.FAILED;
-        state.error = action.payload as string;
+        // @ts-ignore
+        state.error = action.payload ?? action.error.message ?? 'Не удалось создать запись';
       });
   },
 });
 
-export const { setWeekAppointments } = appointmentsSlice.actions;
 export default appointmentsSlice.reducer;

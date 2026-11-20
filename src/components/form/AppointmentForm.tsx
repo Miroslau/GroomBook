@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { View, StyleSheet, Text } from 'react-native';
 import { FormInput } from './form-input/FormInput';
 import { PressableButton } from '../Button/Button';
-import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 
 interface AppointmentFormProps {
   time: string;
