@@ -1,0 +1,33 @@
+{
+  "fill" : "automatic",
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "hidden" : false,
+          "image-name" : "icon-1794689013840.jpg",
+          "name" : "icon-1794689013840"
+        },
+        {
+          "hidden" : true,
+          "image-name" : "icon-1794688679933.png",
+          "name" : "icon-1794688679933"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
