@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "grooming-app",
+    "name": "Groom Book",
     "slug": "grooming-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,17 +8,20 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "icon": "./assets/groomBookIos.icon",
       "bundleIdentifier": "com.mr-miraslau.groomingapp",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "userInterfaceStyle": "automatic"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/groomingAppIcon.png",
+        "backgroundImage": "./assets/groomingAppIcon.png",
+        "monochromeImage": "./assets/groomingAppIcon.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.mr_miraslau.groomingapp",
@@ -27,12 +30,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "555ebfd5-7fbd-43c5-b088-a20e56486109"
-      }
-    },
-    "scheme": "grooming-app",
     "plugins": [
       [
         "expo-font",
@@ -197,7 +194,12 @@
       ],
       "expo-splash-screen",
       "expo-web-browser",
-      "@react-native-google-signin/google-signin"
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.907187837254-sp7udhl15q9emqro5vfprd2k2p8ealkm"
+        }
+      ]
     ]
   }
 }
