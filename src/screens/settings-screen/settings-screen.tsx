@@ -6,6 +6,8 @@ import { AppDispatch, useAppSelector } from '../../store/store';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { PressableButton } from '../../components/Button/Button';
+import { performFullSignOut } from '../../utils/authSession';
+import { unsubscribeFromAppointments } from '../../store/feature/appointment/appointmentsSlice';
 
 const DANGER_COLOR = '#F87171';
 const DANGER_BG = 'rgba(248, 113, 113, 0.12)';
@@ -22,8 +24,12 @@ const SettingsScreen = () => {
   const executeSignOut = useCallback(async () => {
     setIsSignOut(true);
     try {
-      await perfor;
+      await performFullSignOut(async () => {
+        await dispatch(unsubscribeFromAppointments());
+      });
     } catch (error: unknown) {
+      console.error('Logout error:', error);
+      Alert.alert('Ошибка', 'Не удалось выйти из аккаунта. Попробуйте ещё раз.');
     } finally {
       setIsSignOut(false);
     }

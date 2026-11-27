@@ -10,7 +10,7 @@ import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
 
 const LoginScreen = () => {
-  const { signInWithGoogle, isLoggingIn, error } = useGoogleAuth();
+  const { signInWithGoogle, isLoggingIn } = useGoogleAuth();
 
   return (
     <SafeAreaView style={styles.viewContainer}>

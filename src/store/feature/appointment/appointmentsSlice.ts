@@ -19,6 +19,7 @@ import {
   getErrorMessage,
   normalizeSlotTime,
 } from '../../../utils/timeUtils';
+import { logoutAction } from '../auth/authSlice';
 
 interface SubscribeWeekPayload {
   weekStartDate: string;
@@ -204,6 +205,11 @@ const appointmentsSlice = createSlice({
         state.status = WeekStatusEnum.FAILED;
         // @ts-ignore
         state.error = action.payload ?? action.error.message ?? 'Не удалось создать запись';
+      })
+      .addCase(logoutAction, (state) => {
+        state.weekAppointments = [];
+        state.status = WeekStatusEnum.IDLE;
+        state.error = null;
       });
   },
 });

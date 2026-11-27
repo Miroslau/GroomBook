@@ -1,77 +1,107 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store/store';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import {
+  GoogleSignin,
+  isCancelledResponse,
+  isErrorWithCode,
+  isSuccessResponse,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 import { Platform } from 'react-native';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../utils/firebaseConfig';
-import { setUser } from '../store/feature/auth/authSlice';
-
-const WEB_CLIENT_ID = '907187837254-99o7pjb4sid54eg94scdj1qo9mok74f9.apps.googleusercontent.com';
+import { mapFirebaseUser, setUser } from '../store/feature/auth/authSlice';
+import { configureGoogleSignIn } from '../utils/googleAuthConfig';
 
 interface UseGoogleAuthResult {
   signInWithGoogle: () => Promise<void>;
+  clearError: () => void;
   isLoggingIn: boolean;
   error: string | null;
 }
+
+const getAuthErrorMessage = (error: unknown): string | null => {
+  if (isErrorWithCode(error)) {
+    switch (error.code) {
+      case statusCodes.SIGN_IN_CANCELLED:
+        return null;
+      case statusCodes.IN_PROGRESS:
+        return null;
+      case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+        return 'Сервисы Google Play недоступны или устарели на этом устройстве.';
+      case 'auth/network-request-failed':
+      case 'NETWORK_ERROR':
+        return 'Для первого входа нужен интернет. Проверьте подключение и попробуйте снова.';
+      case 'DEVELOPER_ERROR':
+        return 'Ошибка конфигурации входа Google (проверьте SHA-1 и webClientId).';
+      default:
+        return error.message || 'Не удалось выполнить вход через Google.';
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'Произошла неизвестная ошибка при входе через Google.';
+};
 
 export const useGoogleAuth = (): UseGoogleAuthResult => {
   const dispatch = useDispatch<AppDispatch>();
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const isLoggingInRef = useRef<boolean>(false);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    try {
-      setIsLoggingIn(true);
-      setError(null);
+    if (isLoggingInRef.current) {
+      return;
+    }
 
+    isLoggingInRef.current = true;
+    setIsLoggingIn(true);
+    setError(null);
+
+    try {
       if (Platform.OS === 'android') {
         await GoogleSignin.hasPlayServices({
           showPlayServicesUpdateDialog: true,
         });
       }
 
-      const userInfo = await GoogleSignin.signIn();
+      const response = await GoogleSignin.signIn();
 
-      const idToken = userInfo.data?.idToken;
-
-      if (!idToken) {
-        throw new Error('Google Sign-In: Не удалось получить ID Token.');
+      if (isCancelledResponse(response)) {
+        return;
       }
 
-      const credential = GoogleAuthProvider.credential(idToken);
+      if (!isSuccessResponse(response) || !response.data.idToken) {
+        throw new Error('Не удалось получить токен авторизации Google.');
+      }
+
+      const credential = GoogleAuthProvider.credential(response.data.idToken);
       const userCredential = await signInWithCredential(auth, credential);
-      const firebaseUser = userCredential.user;
 
-      dispatch(
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
-          photoURL: firebaseUser.photoURL,
-        })
-      );
-    } catch (error: any) {
+      dispatch(setUser(mapFirebaseUser(userCredential.user)));
+    } catch (error: unknown) {
       console.error('Google Sign-In Error:', error);
-
-      // Обработка отмены (чтобы не спамить ошибками, если пользователь просто закрыл окно)
-      if (error.code === 'SIGN_IN_CANCELLED') {
-        setError('Вход отменен пользователем');
-      } else {
-        setError(error.message || 'Произошла ошибка при входе через Google');
+      const message = getAuthErrorMessage(error);
+      if (message) {
+        setError(message);
       }
     } finally {
+      isLoggingInRef.current = false;
       setIsLoggingIn(false);
     }
   }, [dispatch]);
 
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: WEB_CLIENT_ID,
-      iosClientId: '907187837254-sp7udhl15q9emqro5vfprd2k2p8ealkm.apps.googleusercontent.com',
-      offlineAccess: true,
-    });
+    configureGoogleSignIn();
   }, []);
 
-  return { signInWithGoogle, isLoggingIn, error };
+  return { signInWithGoogle, clearError, isLoggingIn, error };
 };
