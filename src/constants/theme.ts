@@ -30,4 +30,11 @@ export const DARK_THEME = {
   borderStrong: '#24324A',
   borderSubtle: '#192336',
   dividerAccent: 'rgba(230, 165, 59, 0.55)',
+
+  infoText: '#60A5FA',
+  infoBg: 'rgba(96, 165, 250, 0.14)',
+
+  dangerText: '#F87171',
+  dangerBg: 'rgba(248, 113, 113, 0.12)',
+  dangerBorder: 'rgba(248, 113, 113, 0.35)',
 } as const;

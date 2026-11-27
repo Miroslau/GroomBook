@@ -1,186 +1,269 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import CalendarSvg from '../../components/svg/CalendarSvg';
-import CloudSvg from '../../components/svg/CloudSvg';
-import ClockSvg from '../../components/svg/ClockSvg';
-import IconSvg from '../../components/svg/IconSvg';
 import { PressableButton } from '../../components/Button/Button';
-import GoogleSvg from '../../components/svg/GoogleSvg';
-import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useGoogleAuth } from '../../hooks/useGoogleAuth';
+import { FeatureItem, FeatureRow } from '../../components/FeatureRow/FeatureRow';
+import { DARK_THEME } from '../../constants/theme';
+import { BrandEmblem } from '../../components/svg/BrandEmblemSVG';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeInUp,
+  FadeOutUp,
+  LinearTransition,
+  useReducedMotion,
+} from 'react-native-reanimated';
+
+const FEATURES: readonly FeatureItem[] = [
+  {
+    id: 'calendar',
+    icon: 'calendar-outline',
+    iconColor: DARK_THEME.statusConfirmedText,
+    iconBg: DARK_THEME.statusConfirmedBg,
+    text: 'Загруженные дни сразу видны в календаре',
+  },
+  {
+    id: 'offline-sync',
+    icon: 'cloud-done-outline',
+    iconColor: DARK_THEME.infoText,
+    iconBg: DARK_THEME.infoBg,
+    text: 'Работает офлайн и сам синхронизируется с облаком',
+  },
+  {
+    id: 'reminders',
+    icon: 'notifications-outline',
+    iconColor: DARK_THEME.accentPrimary,
+    iconBg: DARK_THEME.accentSoft,
+    text: 'Напоминания о предстоящих записях',
+  },
+];
+
+const SMOOTH_EASE = Easing.out(Easing.cubic);
+
+const EYEBROW_ENTERING = FadeInDown.delay(100).duration(380).easing(SMOOTH_EASE);
+const TITLE_ENTERING = FadeInDown.delay(170).duration(420).easing(SMOOTH_EASE);
+const SUBTITLE_ENTERING = FadeInDown.delay(240).duration(420).easing(SMOOTH_EASE);
+const FEATURES_CARD_ENTERING = FadeInDown.delay(300).duration(420).easing(SMOOTH_EASE);
+const BOTTOM_SECTION_ENTERING = FadeInUp.delay(520).duration(440).easing(SMOOTH_EASE);
+
+const ERROR_ENTERING = FadeInUp.duration(240).easing(SMOOTH_EASE);
+const ERROR_EXITING = FadeOutUp.duration(180);
+const SMOOTH_LAYOUT = LinearTransition.duration(220).easing(SMOOTH_EASE);
 
 const LoginScreen = () => {
-  const { signInWithGoogle, isLoggingIn } = useGoogleAuth();
+  const { signInWithGoogle, clearError, isLoggingIn, error } = useGoogleAuth();
+
+  const isReducedMotion = useReducedMotion();
 
   return (
-    <SafeAreaView style={styles.viewContainer}>
-      <View>
-        <Animated.View style={styles.titleWrapper} entering={FadeInUp.duration(600).delay(100)}>
-          <View style={styles.titleSquare}>
-            <IconSvg />
-          </View>
-          <View style={styles.textWrapper}>
-            <Text style={styles.title}>DEWAL PRO GROOMING</Text>
-            <Text style={styles.h1}>Pet Record Book</Text>
-            <Text style={styles.description}>
-              Your appointment book, on every page you need, always in sync.
-            </Text>
-          </View>
-        </Animated.View>
-        <Animated.View style={styles.listContainer} entering={FadeInUp.duration(600).delay(350)}>
-          <View style={styles.listItem}>
-            <CalendarSvg />
-            <Text style={styles.itemText}>See booked days at a glance in the calendar</Text>
-          </View>
-          <View style={styles.listItem}>
-            <CloudSvg />
-            <Text style={styles.itemText}>Works offline, syncs to the cloud automatically</Text>
-          </View>
-          <View
-            style={[
-              styles.listItem,
-              {
-                borderBottomWidth: 1,
-                borderBottomColor: '#DCD2BE',
-              },
-            ]}
+    <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+      <StatusBar barStyle="light-content" />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.heroSection}>
+          <BrandEmblem />
+
+          <Animated.Text
+            entering={isReducedMotion ? undefined : EYEBROW_ENTERING}
+            style={styles.eyebrow}
           >
-            <ClockSvg />
-            <Text style={styles.itemText}>Reminders for upcoming appointments</Text>
-          </View>
-        </Animated.View>
-      </View>
-      <Animated.View entering={FadeInUp.duration(600).delay(600)} style={styles.footerContainer}>
-        <PressableButton
-          onPress={signInWithGoogle}
-          accessibilityLabel="Sign in with Google"
-          activeScale={0.96}
-          duration={120}
-          style={styles.loginButton}
-          disabled={isLoggingIn}
+            ГРУМИНГ-ЖУРНАЛ
+          </Animated.Text>
+          <Animated.Text
+            entering={isReducedMotion ? undefined : TITLE_ENTERING}
+            style={styles.title}
+          >
+            Groom Book
+          </Animated.Text>
+          <Animated.Text
+            entering={isReducedMotion ? undefined : SUBTITLE_ENTERING}
+            style={styles.subtitle}
+          >
+            Ваша книга записей клиентов — всегда под рукой и в синхронизации.
+          </Animated.Text>
+        </View>
+
+        <Animated.View
+          entering={isReducedMotion ? undefined : FEATURES_CARD_ENTERING}
+          style={styles.featuresCard}
         >
-          <View style={styles.row}>
-            {isLoggingIn ? (
-              <ActivityIndicator size="small" color="#1D2B52" />
-            ) : (
-              <>
-                <GoogleSvg />
-                <Text style={styles.buttonText}>Sign in with Google</Text>
-              </>
-            )}
-          </View>
-        </PressableButton>
-        <Text style={styles.buttonSubText}>
-          Your session stays signed in between launches. Records are stored only for your grooming
-          business.
-        </Text>
-      </Animated.View>
+          {FEATURES.map((item, index) => (
+            <FeatureRow
+              key={item.id}
+              item={item}
+              index={index}
+              showDivider={index < FEATURES.length - 1}
+              disableAnimation={isReducedMotion}
+            />
+          ))}
+        </Animated.View>
+
+        <Animated.View
+          style={styles.bottomSection}
+          entering={isReducedMotion ? undefined : BOTTOM_SECTION_ENTERING}
+          layout={isReducedMotion ? undefined : SMOOTH_LAYOUT}
+        >
+          {Boolean(error) && (
+            <Animated.View
+              entering={isReducedMotion ? undefined : ERROR_ENTERING}
+              exiting={isReducedMotion ? undefined : ERROR_EXITING}
+              style={styles.errorBanner}
+              accessibilityRole="alert"
+            >
+              <Ionicons name="alert-circle-outline" size={18} color={DARK_THEME.dangerText} />
+              <Text style={styles.errorText}>{error}</Text>
+              <PressableButton
+                onPress={clearError}
+                accessibilityLabel="Скрыть сообщение об ошибке"
+                style={styles.errorCloseButton}
+              >
+                <Ionicons name="close" size={16} color={DARK_THEME.dangerText} />
+              </PressableButton>
+            </Animated.View>
+          )}
+
+          <PressableButton
+            onPress={signInWithGoogle}
+            disabled={isLoggingIn}
+            accessibilityLabel="Войти через Google"
+            activeScale={0.98}
+            style={[styles.googleButton, isLoggingIn && styles.googleButtonDisabled]}
+          >
+            <View style={styles.googleButtonContent}>
+              {isLoggingIn ? (
+                <ActivityIndicator size="small" color={DARK_THEME.textOnAccent} />
+              ) : (
+                <Ionicons name="logo-google" size={20} color={DARK_THEME.textOnAccent} />
+              )}
+              <Text style={styles.googleButtonText}>
+                {isLoggingIn ? 'Выполняется вход...' : 'Войти через Google'}
+              </Text>
+            </View>
+          </PressableButton>
+
+          <Text style={styles.disclaimer}>
+            Сессия сохраняется между запусками. Все записи хранятся только в вашем аккаунте.
+          </Text>
+        </Animated.View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  viewContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#F6F0E1',
-    paddingVertical: 41,
-    paddingHorizontal: 24,
+    backgroundColor: DARK_THEME.bgBase,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 36,
+    paddingBottom: 20,
+    gap: 28,
   },
-
-  titleWrapper: {
-    paddingHorizontal: 17,
+  heroSection: {
     alignItems: 'center',
   },
-
-  titleSquare: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 88,
-    height: 88,
-    borderWidth: 2,
-    borderColor: '#1D3A7A',
-    borderRadius: 4,
-    transform: [{ rotate: '-6deg' }],
-    marginBottom: 20,
-  },
-  textWrapper: {
-    gap: 10,
+  eyebrow: {
+    marginTop: 26,
+    fontFamily: 'Source Sans 3',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.8,
+    color: DARK_THEME.accentPrimary,
+    textAlign: 'center',
   },
   title: {
-    fontFamily: 'Source Sans 3',
-    fontSize: 12,
-    fontWeight: 'regular',
-    lineHeight: 16,
-    letterSpacing: 2.4,
-    color: '#5E6E8C',
-    textAlign: 'center',
-  },
-  h1: {
+    marginTop: 8,
     fontFamily: 'Roboto Slab',
     fontSize: 30,
-    fontWeight: 'bold',
-    lineHeight: 36,
+    fontWeight: '700',
+    lineHeight: 38,
+    color: DARK_THEME.textPrimary,
     textAlign: 'center',
-    color: '#1D2B52',
   },
-  description: {
+  subtitle: {
+    marginTop: 10,
+    maxWidth: 300,
     fontFamily: 'Source Sans 3',
-    fontSize: 16,
-    fontWeight: 'regular',
-    lineHeight: 24,
+    fontSize: 15,
+    fontWeight: '400',
+    lineHeight: 22,
+    color: DARK_THEME.textSecondary,
     textAlign: 'center',
-    color: '#5E6E8C',
   },
-  listContainer: {
-    paddingTop: 50,
-  },
-  listItem: {
-    borderTopWidth: 1,
-    borderTopColor: '#DCD2BE',
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    columnGap: 12,
-  },
-  itemText: {
-    fontFamily: 'Source Sans 3',
-    fontSize: 14,
-    fontWeight: 'regular',
-    lineHeight: 20,
-    color: '#1D2B52',
-  },
-  loginButton: {
-    width: '100%',
-    height: 56,
-    borderRadius: 4,
-    backgroundColor: '#FBF7EC',
+  featuresCard: {
+    backgroundColor: DARK_THEME.bgSurface,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#DCD2BE',
+    borderColor: DARK_THEME.borderStrong,
+    overflow: 'hidden',
   },
-  row: {
+  bottomSection: {
+    gap: 12,
+  },
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    columnGap: 12,
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: DARK_THEME.dangerBg,
+    borderWidth: 1,
+    borderColor: DARK_THEME.dangerBorder,
   },
-  buttonText: {
+  errorText: {
+    flex: 1,
+    fontFamily: 'Source Sans 3',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+    color: DARK_THEME.dangerText,
+  },
+  errorCloseButton: {
+    padding: 4,
+  },
+  googleButton: {
+    width: '100%',
+    minHeight: 54,
+    borderRadius: 14,
+    backgroundColor: DARK_THEME.textPrimary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  googleButtonDisabled: {
+    opacity: 0.7,
+  },
+  googleButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  googleButtonText: {
     fontFamily: 'Source Sans 3',
     fontSize: 16,
-    fontWeight: 'bold',
-    lineHeight: 24,
-    color: '#1D2B52',
+    fontWeight: '700',
+    lineHeight: 22,
+    color: DARK_THEME.textOnAccent,
   },
-  buttonSubText: {
+  disclaimer: {
     fontFamily: 'Source Sans 3',
     fontSize: 12,
-    fontWeight: 'regular',
-    lineHeight: 16,
-    color: '#5E6E8C',
+    fontWeight: '400',
+    lineHeight: 18,
+    color: DARK_THEME.textMuted,
     textAlign: 'center',
-  },
-  footerContainer: {
-    gap: 12,
+    paddingHorizontal: 8,
   },
 });
 
