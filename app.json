@@ -199,7 +199,9 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.907187837254-sp7udhl15q9emqro5vfprd2k2p8ealkm"
         }
-      ]
+      ],
+      "@react-native-vector-icons/ant-design",
+      "@react-native-vector-icons/ionicons"
     ]
   }
 }

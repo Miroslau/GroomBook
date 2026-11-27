@@ -1,19 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, StyleSheet, View, Keyboard } from 'react-native';
-import { PressableButton } from '../../components/Button/Button';
+import { Text, StyleSheet, View, Keyboard, StatusBar } from 'react-native';
 import { auth } from '../../utils/firebaseConfig';
 import { signOut } from 'firebase/auth';
 import DateSlider from '../../components/DateSlider/DateSlider';
-import { endOfWeek, format, startOfWeek } from 'date-fns';
+import { format, startOfWeek } from 'date-fns';
 import { TimeLine } from '../../components/TimeLine/TimeLine';
 import { TimelineSlot } from '../../types/TimelineSlot';
 import CustomBottomSheetModal, {
   BottomSheetModalRef,
 } from '../../components/BottomSheetModal/CustomBottomSheetModal';
 import { AppointmentForm } from '../../components/form/AppointmentForm';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState, useAppSelector } from '../../store/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch, useAppSelector } from '../../store/store';
 import { UserData } from '../../store/feature/auth/authSlice';
 import {
   createAppointment,
@@ -24,9 +23,9 @@ import {
   selectAppointmentsCountMap,
   selectTimelineDataForDate,
 } from '../../store/feature/appointment/appointmentsSelectors';
-import GroomingCard from '../../components/GroomingCard/GroomingCard';
 import { AppointmentFormData } from '../../types/appointmentFormSchema';
 import { TimelineSlotItem } from '../../components/TimeLine/TimelineSlotItem';
+import { DARK_THEME, LAYOUT } from '../../constants/theme';
 
 const HomeScreen = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -117,7 +116,8 @@ const HomeScreen = () => {
   }, [dispatch, weekStartDate, user?.uid]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <StatusBar barStyle="light-content" />
       <DateSlider
         selectedDate={selectedDate}
         onDateChange={handleDateChange}
@@ -169,59 +169,37 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F6F0E1',
+    backgroundColor: DARK_THEME.bgSurface,
   },
   tableHeader: {
     flexDirection: 'row',
-    height: 34,
+    height: 36,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#DCD2BE',
+    backgroundColor: DARK_THEME.bgSurface,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: DARK_THEME.borderStrong,
   },
   headerText: {
     fontFamily: 'Source Sans 3',
     fontSize: 11,
-    fontWeight: '600',
-    color: '#7E8A9F',
-    letterSpacing: 0.5,
+    fontWeight: '700',
+    color: DARK_THEME.textSecondary,
+    letterSpacing: 0.8,
   },
   timeColumn: {
-    width: 74,
+    width: LAYOUT.timeColumnWidth,
     justifyContent: 'center',
     alignItems: 'center',
   },
   timelineDivider: {
-    width: 2,
-    height: 34,
-    backgroundColor: '#E6A53B',
+    width: LAYOUT.dividerWidth,
+    height: '100%',
+    backgroundColor: DARK_THEME.dividerAccent,
   },
   contentColumn: {
     flex: 1,
     paddingHorizontal: 16,
     justifyContent: 'center',
   },
-  nameText: { fontSize: 20, fontWeight: 'bold', color: '#1D2B52' },
-  emailText: { fontSize: 14, color: '#5E6E8C', marginBottom: 30 },
-  logoutButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    backgroundColor: '#FF3B30',
-    borderRadius: 8,
-  },
-  logoutText: { color: '#FFF', fontWeight: 'bold' },
-  availableText: {
-    fontFamily: 'Source Sans 3',
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#5E6E8C',
-  },
-  slotPressable: {
-    flex: 1,
-    width: '100%',
-    paddingHorizontal: 16,
-    alignItems: 'flex-start',
-  },
-  modalContent: { paddingTop: 10, alignItems: 'center' },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#1D2B52', marginBottom: 6 },
-  modalSubtitle: { fontSize: 14, color: '#5E6E8C' },
 });
