@@ -2,6 +2,7 @@ import { FC, memo, ReactNode, useCallback, useMemo } from 'react';
 import { View, StyleSheet, ListRenderItemInfo, FlatList, Text } from 'react-native';
 import { TimelineSlot } from '../../types/TimelineSlot';
 import { formatMinutesToTime } from '../../utils/timeUtils';
+import { DARK_THEME, LAYOUT } from '../../constants/theme';
 
 interface TimeLineProps {
   startHour?: number;
@@ -10,8 +11,6 @@ interface TimeLineProps {
   bookedTimes: string[];
   renderItem: (slot: TimelineSlot) => ReactNode;
 }
-
-const SLOT_HEIGHT = 80;
 
 export const TimeLine: FC<TimeLineProps> = memo(
   ({ startHour = 9, endHour = 19, stepMinutes = 30, bookedTimes, renderItem }) => {
@@ -43,15 +42,15 @@ export const TimeLine: FC<TimeLineProps> = memo(
     const renderRow = useCallback(
       ({ item }: ListRenderItemInfo<TimelineSlot>) => {
         return (
-          <View
-            style={[
-              styles.rowContainer,
-              item.isAvailable && styles.availableRow,
-              item.isHalfHour && styles.halfHourRow,
-            ]}
-          >
+          <View style={[styles.rowContainer, item.isHalfHour && styles.halfHourRow]}>
             <View style={styles.timeColumn}>
-              <Text style={[styles.timeText, item.isHalfHour && styles.halfHourTimeText]}>
+              <Text
+                style={[
+                  styles.timeText,
+                  item.isHalfHour && styles.halfHourTimeText,
+                  !item.isAvailable && styles.bookedTimeText,
+                ]}
+              >
                 {item.time}
               </Text>
             </View>
@@ -65,8 +64,8 @@ export const TimeLine: FC<TimeLineProps> = memo(
 
     const getItemLayout = useCallback(
       (_data: ArrayLike<TimelineSlot> | null | undefined, index: number) => ({
-        length: SLOT_HEIGHT,
-        offset: SLOT_HEIGHT * index,
+        length: LAYOUT.slotHeight,
+        offset: LAYOUT.slotHeight * index,
         index,
       }),
       []
@@ -97,45 +96,48 @@ TimeLine.displayName = 'TimeLine';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FBF7EC',
+    backgroundColor: DARK_THEME.bgBase,
+  },
+  listContent: {
+    paddingBottom: 24,
   },
   rowContainer: {
     flexDirection: 'row',
-    height: SLOT_HEIGHT,
-    backgroundColor: '#FFF8E7', // Фон для занятого слота
+    height: LAYOUT.slotHeight,
+    backgroundColor: DARK_THEME.bgBase,
     borderBottomWidth: 1,
-    borderBottomColor: '#DCD2BE',
-  },
-  availableRow: {
-    backgroundColor: '#FBF7EC', // Фон для свободного Available слота
+    borderBottomColor: DARK_THEME.borderStrong,
   },
   halfHourRow: {
-    borderBottomColor: '#E8E0CE',
+    borderBottomColor: DARK_THEME.borderSubtle,
   },
   timeColumn: {
-    width: 75,
+    width: LAYOUT.timeColumnWidth,
     justifyContent: 'center',
     alignItems: 'center',
   },
   timeText: {
     fontFamily: 'Source Sans 3',
-    fontSize: 16,
-    fontWeight: 'bold',
-    lineHeight: 24,
-    color: '#1D2B52',
-  },
-  timelineDivider: {
-    width: 2,
-    backgroundColor: '#E6A53B',
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 20,
+    color: DARK_THEME.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   halfHourTimeText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#5E6E8C',
+    fontSize: 13,
+    fontWeight: '500',
+    color: DARK_THEME.textMuted,
+  },
+  bookedTimeText: {
+    color: DARK_THEME.accentPrimary,
+  },
+  timelineDivider: {
+    width: LAYOUT.dividerWidth,
+    backgroundColor: DARK_THEME.dividerAccent,
   },
   contentColumn: {
     flex: 1,
-    //paddingHorizontal: 16,
-    //justifyContent: 'center',
+    justifyContent: 'center',
   },
 });

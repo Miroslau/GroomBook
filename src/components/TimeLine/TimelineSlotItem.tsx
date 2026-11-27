@@ -1,9 +1,10 @@
 import { TimelineSlot } from '../../types/TimelineSlot';
 import { FirestoreAppointment } from '../../types/FirestoreAppointment';
 import { FC, memo, useCallback } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { PressableButton } from '../Button/Button';
 import GroomingCard from '../GroomingCard/GroomingCard';
+import { DARK_THEME } from '../../constants/theme';
 
 interface TimelineSlotItemProps {
   slot: TimelineSlot;
@@ -25,7 +26,9 @@ export const TimelineSlotItem: FC<TimelineSlotItemProps> = memo(
         style={styles.slotPressable}
       >
         {slot.isAvailable ? (
-          <Text style={styles.availableText}>Доступно</Text>
+          <View style={styles.emptySlotContainer}>
+            <Text style={styles.availableText}>+ Добавить запись</Text>
+          </View>
         ) : (
           appointment && (
             <GroomingCard
@@ -43,16 +46,23 @@ export const TimelineSlotItem: FC<TimelineSlotItemProps> = memo(
 TimelineSlotItem.displayName = 'TimelineSlotItem';
 
 const styles = StyleSheet.create({
-  availableText: {
-    fontFamily: 'Source Sans 3',
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#5E6E8C',
-  },
   slotPressable: {
     flex: 1,
     width: '100%',
-    paddingHorizontal: 16,
-    alignItems: 'flex-start',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    justifyContent: 'center',
+  },
+  emptySlotContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  availableText: {
+    fontFamily: 'Source Sans 3',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+    color: DARK_THEME.textMuted,
   },
 });

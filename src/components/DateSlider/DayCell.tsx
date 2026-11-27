@@ -3,6 +3,7 @@ import { FC, memo, useCallback, useMemo } from 'react';
 import { ru } from 'date-fns/locale';
 import { StyleSheet, Text, View } from 'react-native';
 import { PressableButton } from '../Button/Button';
+import { DARK_THEME } from '../../constants/theme';
 
 interface DayCellProps {
   day: Date;
@@ -63,64 +64,73 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 4,
   },
   dayView: {
-    borderRadius: 4,
-    paddingVertical: 2,
-    paddingHorizontal: 4,
+    width: 34,
+    height: 30,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   selectedDayButton: {
-    backgroundColor: '#1D3A7A',
+    backgroundColor: DARK_THEME.accentPrimary,
   },
   todayButton: {
-    borderWidth: 1,
-    borderColor: '#1D3A7A',
+    borderWidth: 1.5,
+    borderColor: DARK_THEME.accentPrimary,
+    backgroundColor: DARK_THEME.accentSoft,
   },
   dayOfWeekText: {
     fontFamily: 'Open Sans 3',
-    fontSize: 12,
-    fontWeight: '400',
-    lineHeight: 16,
-    color: '#5E6E8C',
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 14,
+    color: DARK_THEME.textMuted,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   dayNumberText: {
     fontFamily: 'Open Sans 3',
     fontSize: 14,
-    fontWeight: 'bold',
-    lineHeight: 20,
-    color: '#1D2B52',
+    fontWeight: '700',
+    lineHeight: 18,
+    color: DARK_THEME.textPrimary,
+    fontVariant: ['tabular-nums'],
   },
   selectedDayText: {
-    color: '#1D3A7A',
+    color: DARK_THEME.accentPrimary,
   },
   selectedText: {
-    color: '#FFF',
+    color: DARK_THEME.textOnAccent,
   },
   badgeContainer: {
-    height: 14,
-    marginTop: 2,
+    height: 16,
+    marginTop: 4,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   badge: {
-    backgroundColor: '#E6A53B',
-    borderRadius: 6,
+    backgroundColor: DARK_THEME.bgCard,
+    borderWidth: 1,
+    borderColor: DARK_THEME.accentPrimary,
+    borderRadius: 8,
     paddingHorizontal: 5,
-    minWidth: 12,
-    height: 12,
+    minWidth: 16,
+    height: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   selectedBadge: {
-    backgroundColor: '#FFF',
+    backgroundColor: DARK_THEME.accentSoft,
+    borderColor: DARK_THEME.accentPrimary,
   },
   badgeText: {
     fontSize: 9,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontWeight: '700',
+    color: DARK_THEME.accentPrimary,
   },
   selectedBadgeText: {
-    color: '#1D3A7A',
+    color: DARK_THEME.accentPrimary,
   },
 });

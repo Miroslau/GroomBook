@@ -6,6 +6,7 @@ import { ru } from 'date-fns/locale';
 import { PressableButton } from '../Button/Button';
 import { CENTER_PAGE_INDEX, useDateSlider, WINDOW_OFFSETS } from '../../hooks/useDateSlider';
 import { WeekPage } from './WeekPage';
+import { DARK_THEME } from '../../constants/theme';
 
 interface WeekSliderProps {
   selectedDate: Date;
@@ -71,10 +72,11 @@ export default DateSlider;
 
 const styles = StyleSheet.create({
   wrapper: {
-    paddingBottom: 12,
+    backgroundColor: DARK_THEME.bgSurface,
+    paddingBottom: 10,
   },
   week: {
-    height: 60,
+    height: 70,
   },
   pageSlot: {
     flex: 1,
@@ -84,22 +86,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
   dayText: {
     fontFamily: 'Open Sans 3',
     fontSize: 12,
-    fontWeight: '400',
+    fontWeight: '600',
     lineHeight: 16,
-    letterSpacing: 0.6,
-    color: '#5E6E8C',
+    letterSpacing: 0.8,
+    color: DARK_THEME.accentPrimary,
   },
   monthText: {
     fontFamily: 'Roboto Slab',
     fontSize: 24,
     fontWeight: 'bold',
     lineHeight: 32,
-    color: '#1D2B52',
+    color: DARK_THEME.textPrimary,
     textTransform: 'capitalize',
   },
 });
